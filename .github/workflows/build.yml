@@ -1,0 +1,40 @@
+name: Build Bastardkb Firmware
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    name: Build firmware
+    runs-on: ubuntu-latest
+    container: qmkfm/base_container
+    strategy:
+      fail-fast: false
+      matrix:
+        keyboard:
+        - charybdis
+
+    steps:
+    - name: Checkout QMK
+      uses: actions/checkout@v3
+      with:
+        repository: ykz89/qmk_firmware
+        ref: bkb-rp2040
+        submodules: recursive
+
+    - name: Checkout user config
+      uses: actions/checkout@v3
+      with:
+        path: users/build-bkb
+
+    - name: Build ${{ matrix.keyboard }} firmware
+      working-directory: users/build-bkb
+      run: qmk compile -j 10 ${{ matrix.keyboard }}.json || true
+
+    - name: Archive ${{ matrix.keyboard }} firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.keyboard }}
+        path: |
+          *.hex
+          *.bin
+          *.uf2
+      continue-on-error: true
