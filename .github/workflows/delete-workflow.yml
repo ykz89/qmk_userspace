@@ -1,0 +1,82 @@
+name: Delete old workflows
+
+on:
+  workflow_call:
+    inputs:
+      days:
+        description: 'Delete age in days'
+        required: false
+        type: string
+        default: 5
+
+jobs:
+  purge:
+    name: Delete old workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Purge cancelled/skipped runs
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const cancelled = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              per_page: 100,
+              repo: context.repo.repo,
+              status: 'cancelled',
+            });
+            
+            const skipped = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              per_page: 100,
+              repo: context.repo.repo,
+              status: 'skipped',
+            });
+            
+            for (const response of [cancelled, skipped]) {
+              for (const run of response.data.workflow_runs) {
+                console.log(`Deleting cancelled/skipped run id ${run.id} of '${run.name}'`);
+                await github.rest.actions.deleteWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id
+                });
+              }
+            }
+
+      - name: Purge runs older than ${{ inputs.days }} days
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const num_days = ${{ inputs.days }};
+            const ms_per_day = 86400000;
+            const now = Date.now();
+            let runs_to_delete = [];
+            
+            const workruns = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              per_page: 100,
+              repo: context.repo.repo,
+            });
+            
+            for (const run of workruns.data.workflow_runs) {
+              if (now - Date.parse(run.created_at) > ms_per_day * num_days) {
+                runs_to_delete.push([run.id, run.name]);
+              }
+            }
+            
+            for (const run of runs_to_delete) {
+              console.log(`Deleting run id ${run[0]} of '${run[1]}' that is older than ${num_days} days.`);
+              try {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run[0]
+                });
+              } catch (error) {
+                // ignore errors
+              }
+            }

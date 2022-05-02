@@ -1,40 +1,57 @@
-name: Build Bastardkb Firmware
+name: Build QMK Userspace
 on: [push, workflow_dispatch]
 
 jobs:
   build:
-    name: Build firmware
+    name: Build Userspace
     runs-on: ubuntu-latest
     container: qmkfm/base_container
     strategy:
       fail-fast: false
       matrix:
         keyboard:
-        - charybdis
+          - corne
+          - kimiko
+#          - charybdis/4x6
 
     steps:
-    - name: Checkout QMK
-      uses: actions/checkout@v3
-      with:
-        repository: ykz89/qmk_firmware
-        ref: bkb-rp2040
-        submodules: recursive
+      - name: Checkout QMK source
+        uses: actions/checkout@v3
+        with:
+          repository: ykz89/qmk_firmware
+          ref: master
+          submodules: recursive
 
-    - name: Checkout user config
-      uses: actions/checkout@v3
-      with:
-        path: users/build-bkb
+      - name: Checkout userspace
+        uses: actions/checkout@v3
+        with:
+          path: users/${{ github.actor }}
+          persist-credentials: false
 
-    - name: Build ${{ matrix.keyboard }} firmware
-      working-directory: users/build-bkb
-      run: qmk compile -j 10 ${{ matrix.keyboard }}.json || true
+      - name: Update python dependencies
+        run: /usr/bin/python3 -m pip install -r requirements.txt
 
-    - name: Archive ${{ matrix.keyboard }} firmware
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ matrix.keyboard }}
-        path: |
-          *.hex
-          *.bin
-          *.uf2
-      continue-on-error: true
+      - name: Build firmware
+        id: build
+        working-directory: users/${{ github.actor }}/keymaps
+        env:
+          build_option: $([ -n "${{ matrix.oled }}" ] && printf "%s" "-e OLED=${{ matrix.oled }}")
+          output_suffix: $([ -n "${{ matrix.oled }}" ] && printf "%s" "_${{ matrix.oled }}")
+        run: |
+          set -x
+          qmk compile -j3 ${{ env.build_option }} ${{ matrix.keyboard }}.json || true
+          echo "::set-output name=artifact-name::${{ matrix.keyboard }}${{ env.output_suffix }}"
+
+      - name: Archive firmware
+        uses: actions/upload-artifact@v3
+        continue-on-error: true
+        with:
+          retention-days: 3
+          name: ${{ steps.build.outputs.artifact-name }}
+          path: |
+            *.hex
+            *.bin
+            *.uf2
+
+  purge:
+    uses: ykz89/build-bkb/.github/workflows/delete-workflow.yml@master

@@ -1,0 +1,17 @@
+{
+  "author": "ykz89",
+  "documentation": "Wrapper based keymap",
+  "keyboard": "crkbd/rev1",
+  "keymap": "ykz89",
+  "layout": "LAYOUT_corne_w",
+  "layers": [
+    [ "HRM(_BASE)" ],
+    [ "_MOUS" ],
+    [ "_NUMB" ],
+    [ "_NAVI" ],
+    [ "_FUNC" ],
+    [ "_SYMB" ]
+  ],
+  "notes": "",
+  "version": 1
+}

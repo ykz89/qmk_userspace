@@ -1,0 +1,17 @@
+{
+  "author": "ykz89",
+  "documentation": "Wrapper based keymap",
+  "keyboard": "keycapsss/kimiko",
+  "keymap": "ykz89",
+  "layout": "LAYOUT_60key_w",
+  "layers": [
+    [ "C_60(HRM(_BASE))" ],
+    [ "C_60(_NAVI)" ],
+    [ "C_60(_MOUS)" ],
+    [ "C_60(_NUMB)" ],
+    [ "C_60(_FUNC)" ],
+    [ "C_60(_SYMB)" ]
+  ],
+  "notes": "",
+  "version": 1
+}
