@@ -1,0 +1,6 @@
+#undef PROCYON_50_42
+#define PROCYON_42_50
+#define MXT_INVERT_Y
+#define MXT_INVERT_X
+
+#define SPLIT_LAYER_STATE_ENABLE
