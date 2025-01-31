@@ -1,0 +1,59 @@
+{
+    "keyboard_name": "trackball_module",
+    "manufacturer": "aki27",
+    "url": "",
+    "maintainer": "aki27",
+    "usb": {
+        "vid": "0x1727",
+        "pid": "0x0004",
+        "device_version": "0.0.1"
+    },
+    "processor": "atmega32u4",
+    "bootloader": "caterina",
+    "matrix_pins": {
+        "direct": [
+            ["B6", "B3", "B2"]
+        ]
+    },
+    "qmk": {
+        "locking": {
+          "enabled": false,
+          "resync": false
+        }
+    },   
+    "build": {
+        "lto": true
+    },    
+    "features": {
+        "audio": false,
+        "backlight": false,
+        "bootmagic": true,
+        "command": false,
+        "console": false,
+        "encoder":true,
+        "extrakey": true,
+        "mousekey": true,
+        "nkro": false,
+        "oled": true,
+        "pointing_device": true,
+        "rgblight": false
+    },
+    "debounce": 5,
+    "tapping": {
+        "term": 200
+    },
+    "encoder": {
+        "rotary": [
+            { "pin_a": "D2", "pin_b": "D3", "resolution": 4 }
+        ]
+    },
+    "layouts": {
+        "LAYOUT": {
+            "layout": [
+                { "matrix": [0,0], "x": 0, "y": 0},
+                { "matrix": [0,1], "x": 1, "y": 0},
+                { "matrix": [0,2], "x": 2, "y": 0}
+            ]
+        }
+    }
+}
