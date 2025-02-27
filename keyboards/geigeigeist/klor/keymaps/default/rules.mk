@@ -1,0 +1,2 @@
+PIN_COMPATIBLE = elite_c
+CONVERT_TO=rp2040_ce
