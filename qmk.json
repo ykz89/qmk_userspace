@@ -7,9 +7,8 @@
         ["bastardkb/dilemma/4x6_4", "ykz89"],
         ["bastardkb/dilemma/3x5_3", "ykz89"],
         ["bastardkb/dilemma/3x5_2/splinky", "ykz89"],
-        ["bastardkb/skeletyl/v2/splinky_3", "ykz89"],
+        ["bastardkb/skeletyl/v2/splinky_3", "ykz89"]
 //        ["crkbd/rev1", "ykz89"],
-        ["geigeigeist/klor", "default"]
 //        ["testamatta/sunflower/000/xiao_rp2040", "via"]
     ]
 }
