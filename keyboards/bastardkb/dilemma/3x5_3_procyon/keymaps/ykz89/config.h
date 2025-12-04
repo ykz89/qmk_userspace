@@ -1,9 +1,13 @@
-#undef PROCYON_50_42
-#define PROCYON_42_50
-#define MXT_INVERT_Y
-#define MXT_INVERT_X
+// #undef PROCYON_50_42
+// #define PROCYON_42_50
+// #define MXT_INVERT_Y
+// #define MXT_INVERT_X
+
+#define DYNAMIC_KEYMAP_LAYER_COUNT 8
 
 #define SPLIT_LAYER_STATE_ENABLE
+#define SPLIT_LED_STATE_ENABLE
+
 #define MACOS_TRACKPAD_MOD
 
 

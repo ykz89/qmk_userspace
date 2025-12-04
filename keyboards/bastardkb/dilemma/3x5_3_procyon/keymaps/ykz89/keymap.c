@@ -315,9 +315,9 @@ void pointing_device_keycode_handler(uint16_t keycode, bool pressed) {
 
 // bool digitizer_task_kb(digitizer_t *digitizer_state) {
 //     // Update digitizer button state from physical button state tracked in keycode handler
-//     digitizer_state->button1 = (digitizer_button_state & 0x01) ? 1 : 0;
-//     digitizer_state->button2 = (digitizer_button_state & 0x02) ? 1 : 0;
-//     digitizer_state->button3 = (digitizer_button_state & 0x04) ? 1 : 0;
+//     // digitizer_state->button1 = (digitizer_button_state & 0x01) ? 1 : 0;
+//     // digitizer_state->button2 = (digitizer_button_state & 0x02) ? 1 : 0;
+//     // digitizer_state->button3 = (digitizer_button_state & 0x04) ? 1 : 0;
 
 //     return digitizer_task_user(digitizer_state);
 // }
