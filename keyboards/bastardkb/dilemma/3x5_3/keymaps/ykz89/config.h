@@ -4,3 +4,4 @@
 #define MXT_INVERT_X
 
 #define SPLIT_LAYER_STATE_ENABLE
+#define MACOS_TRACKPAD_MOD
