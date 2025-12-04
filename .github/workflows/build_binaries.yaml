@@ -10,8 +10,10 @@ jobs:
     name: 'QMK Userspace Build'
     uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
     with:
-      qmk_repo: ykz89/qmk_firmware
-      qmk_ref: ykz89
+    #   qmk_repo: ykz89/qmk_firmware
+    #   qmk_ref: ykz89
+      qmk_repo: loadedsith/qmk_firmware
+      qmk_ref: multitouch_experiment_personal
 
   publish:
     name: 'QMK Userspace Publish'
