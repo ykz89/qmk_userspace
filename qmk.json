@@ -5,10 +5,11 @@
         // ["aki27/cocot46plus", "rp2040"],
         // ["bastardkb/charybdis/3x5/v2/splinky_3", "ykz89"],
         // ["bastardkb/dilemma/4x6_4", "ykz89"],
-        ["bastardkb/dilemma/3x5_3_procyon", "ykz89"],
+        // ["bastardkb/dilemma/3x5_3_procyon", "ykz89"],
         // ["bastardkb/dilemma/3x5_2/splinky", "ykz89"],
         // ["bastardkb/skeletyl/v2/splinky_3", "ykz89"],
         // ["crkbd/rev1", "ykz89"],
-        // ["testamatta/sunflower/000/xiao_rp2040", "via"]
+        // ["testamatta/sunflower/000/xiao_rp2040", "via"],
+        ["sporkus/le_chiffre_32", "ykz89"]
     ]
 }
