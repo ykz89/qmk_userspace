@@ -1,130 +1,60 @@
 // Copyright 2022 @ykz89
 // SPDX-License-Identifier: GPL-2.0-or-later
+//
+// Thin adapter over users/ykz89/. A wrapper adds the Corne's outer pinky
+// columns around the shared 3x10 core; thumbs are the full set, so no chords.
+// No pointing device, so no pointer layer. OLED rendering is board-specific.
+
 #include QMK_KEYBOARD_H
+#include "ykz89.h"
 
-extern keymap_config_t keymap_config;
-
-#ifdef RGBLIGHT_ENABLE
-//Following line allows macro to read current RGB settings
-extern rgblight_config_t rgblight_config;
-#endif
-
-// Each layer gets a name for readability, which is then used in the keymap matrix below.
-// The underscores don't mean anything - you can have a layer called STUFF or any other name.
-// Layer names don't all need to be of the same length, obviously, and you can also skip them
-// entirely and just use numbers.
-enum layers {
-    _COLEMAK,
-    _NAV,
-    _MOUSE,
-    _MEDIA,
-    _NUM,
-    _FUN,
-    _SYM,
-};
-
-// Custom keycodes for layer keys
-// Dual function escape with left command
-#define NAV LT(_NAV, KC_SPC)
-#define MOUSE LT(_MOUSE, KC_TAB)
-#define MEDIA LT(_MEDIA, KC_ESC)
-#define NUM LT(_NUM, KC_BSPC)
-#define FUN LT(_FUN, KC_DEL)
-#define SYM LT(_SYM, KC_ENT)
-
-#define U_RDO C(KC_Y)
-#define U_PST C(KC_V)
-#define U_CPY C(KC_C)
-#define U_CUT C(KC_X)
-#define U_UND C(KC_Z)
+// clang-format off
+// core (30), outer L (3), outer R (3), thumbs (6) -> LAYOUT_split_3x6_3
+#define _CRKBD_WRAP(                                              \
+    l00, l01, l02, l03, l04, r05, r06, r07, r08, r09,            \
+    l10, l11, l12, l13, l14, r15, r16, r17, r18, r19,            \
+    l20, l21, l22, l23, l24, r25, r26, r27, r28, r29,            \
+    OL0, OL1, OL2, OR0, OR1, OR2,                                \
+    t0, t1, t2, t3, t4, t5)                                      \
+    OL0, l00, l01, l02, l03, l04,   r05, r06, r07, r08, r09, OR0, \
+    OL1, l10, l11, l12, l13, l14,   r15, r16, r17, r18, r19, OR1, \
+    OL2, l20, l21, l22, l23, l24,   r25, r26, r27, r28, r29, OR2, \
+                        t0, t1, t2, t3, t4, t5
+#define CRKBD_WRAP(...) _CRKBD_WRAP(__VA_ARGS__)
+#define LAYOUT_wrapper(...) LAYOUT_split_3x6_3(__VA_ARGS__)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-  [_COLEMAK] = LAYOUT_split_3x6_3(
-  //,-----------------------------------------.                                   ,---------------------------------------------.
-     KC_TAB,  KC_Q,  KC_W,  KC_F,  KC_P,  KC_B,                                     KC_J,  KC_L,  KC_U,  KC_Y,  KC_QUOT, KC_MINS,
-  //|------+------+------+------+------+------|                                   |------+------+-------+------+-------+--------|
-    KC_LSFT,  LGUI_T(KC_A),  LALT_T(KC_R),  LCTL_T(KC_S),  LSFT_T(KC_T),  KC_G,     KC_M, LSFT_T(KC_N), LCTL_T(KC_E), LALT_T(KC_I), LGUI_T(KC_O), KC_SCLN,
-  //|------+------+------+------+------+------|                                   |------+------+-------+------+-------+--------|
-    KC_LCTRL,  KC_Z,  ALGR_T(KC_X),  KC_C,  KC_D,  KC_V,                            KC_K , KC_H, KC_COMM, ALGR_T(KC_DOT), KC_SLSH, KC_RSHIFT,
-  //|------+------+------+------+------+------+------|                            |------+------+------+-------+------+-------+--------|
-                               MEDIA,NAV, MOUSE,                                    SYM  , NUM  , FUN
-                              //`--------------------'                            `--------------------'
-  ),
+  [LAYER_BASE] = LAYOUT_wrapper(CRKBD_WRAP(
+    HOME_ROW_MOD_GACS(LAYOUT_LAYER_BASE),
+    KC_TAB, KC_LSFT, KC_LCTL,   KC_MINS, KC_SCLN, KC_LSFT,
+    ESC_MED, SPC_NAV, TAB_FUN,  ENT_SYM, BSP_NUM, KC_DEL)),
 
-  [_NAV] = LAYOUT_split_3x6_3(
-  //,---------------------------------------------.                ,-----------------------------------------.
-     XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,      U_RDO   , U_PST   , U_CPY   , U_CUT   , U_UND   , XXXXXXX ,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_LGUI , KC_LALT , KC_LCTL , KC_LSFT,XXXXXXX,          KC_CAPS , KC_LEFT , KC_DOWN , KC_UP   , KC_RGHT , XXXXXXX ,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, XXXXXXX,KC_ALGR,XXXXXXX,XXXXXXX,XXXXXXX,                KC_INS  , KC_HOME , KC_PGDN , KC_PGUP , KC_END  , XXXXXXX,
-  //|------+------+-------+-------+-------+-------+------|  |------+------+------+------+------+------+------|
-                                    XXXXXXX, XXXXXXX,XXXXXXX,   KC_ENT, KC_BSPC,KC_DEL
-                                  //`--------------------'  `--------------------'
-  ),
+  [LAYER_FUNCTION] = LAYOUT_wrapper(CRKBD_WRAP(
+    LAYOUT_LAYER_FUNCTION,
+    _______, _______, _______,  _______, _______, _______,
+    XXXXXXX, XXXXXXX, _______,  XXXXXXX, XXXXXXX, _______)),
 
-  [_MOUSE] = LAYOUT_split_3x6_3(
-  //,---------------------------------------------.                ,-----------------------------------------.
-     XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,      U_RDO   , U_PST   , U_CPY   , U_CUT   , U_UND   , XXXXXXX ,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_LGUI , KC_LALT , KC_LCTL , KC_LSFT,XXXXXXX,          XXXXXXX , KC_MS_L , KC_MS_D , KC_MS_U , KC_MS_R , XXXXXXX ,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, XXXXXXX,KC_ALGR,XXXXXXX,XXXXXXX,XXXXXXX,                XXXXXXX , KC_WH_L , KC_WH_D , KC_WH_U , KC_WH_R , XXXXXXX,
-  //|------+------+-------+-------+-------+-------+------|  |------+------+------+------+------+------+------|
-                                    XXXXXXX, XXXXXXX,XXXXXXX,   KC_BTN1, KC_BTN3,KC_BTN2
-                                  //`--------------------'  `--------------------'
-  ),
+  [LAYER_NAVIGATION] = LAYOUT_wrapper(CRKBD_WRAP(
+    LAYOUT_LAYER_NAVIGATION,
+    _______, _______, _______,  _______, _______, _______,
+    XXXXXXX, _______, XXXXXXX,   KC_ENT, KC_BSPC, _______)),
 
-  [_MEDIA] = LAYOUT_split_3x6_3(
-  //,---------------------------------------------.                ,-----------------------------------------.
-     XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,      RGB_TOG , RGB_MOD , RGB_HUI , RGB_SAI , RGB_VAI , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_LGUI , KC_LALT , KC_LCTL , KC_LSFT,XXXXXXX,          XXXXXXX , KC_MPRV , KC_VOLD , KC_VOLU , KC_MNXT , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, XXXXXXX,KC_ALGR,XXXXXXX,XXXXXXX,XXXXXXX,                XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------+------|  |------+------+------+------+------+------+------|
-                                    XXXXXXX, XXXXXXX,XXXXXXX,  KC_MSTP , KC_MPLY , KC_MUTE
-                                  //`--------------------'  `--------------------'
-  ),
+  [LAYER_MEDIA] = LAYOUT_wrapper(CRKBD_WRAP(
+    LAYOUT_LAYER_MEDIA,
+    _______, _______, _______,  _______, _______, _______,
+    _______, KC_MPLY, KC_MSTP,  KC_MSTP, KC_MPLY, KC_MUTE)),
 
-  [_NUM] = LAYOUT_split_3x6_3(
-  //,---------------------------------------------.                ,-----------------------------------------.
-     XXXXXXX , KC_LBRC , KC_7    , KC_8    , KC_9    , KC_RBRC,      XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_SCLN , KC_4    , KC_5    , KC_6    , KC_EQL ,        XXXXXXX , KC_LSFT , KC_LCTL , KC_LALT , KC_LGUI , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_GRV  , KC_1    , KC_2    , KC_3    , KC_BSLS,        XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------+------|  |------+------+------+------+------+------+------|
-                                    KC_DOT  , KC_0    , KC_MINS,   XXXXXXX , XXXXXXX , XXXXXXX
-                                  //`--------------------'  `--------------------'
-  ),
+  [LAYER_NUMERAL] = LAYOUT_wrapper(CRKBD_WRAP(
+    LAYOUT_LAYER_NUMERAL,
+    _______, _______, _______,  _______, _______, _______,
+     KC_DOT,    KC_0, KC_MINS,  XXXXXXX, _______, XXXXXXX)),
 
-  [_SYM] = LAYOUT_split_3x6_3(
-  //,---------------------------------------------.                ,-----------------------------------------.
-     XXXXXXX , KC_LCBR , KC_AMPR , KC_ASTR , KC_LPRN , KC_RCBR,      XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_COLN , KC_DLR  , KC_PERC , KC_CIRC , KC_PLUS ,        XXXXXXX , KC_LSFT , KC_LCTL , KC_LALT , KC_LGUI , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_TILD , KC_EXLM , KC_AT   , KC_HASH , KC_PIPE,        XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------+------|  |------+------+------+------+------+------+------|
-                                    KC_LPRN , KC_RPRN , KC_UNDS,   XXXXXXX , XXXXXXX , XXXXXXX
-                                  //`--------------------'  `--------------------'
-  ),
-
-  [_FUN] = LAYOUT_split_3x6_3(
-  //,---------------------------------------------.                ,-----------------------------------------.
-     XXXXXXX , KC_F12  , KC_F7   , KC_F8   , KC_F9   , KC_PSCR ,      XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_F11  , KC_F4   , KC_F5   , KC_F6   , KC_SLCK ,        XXXXXXX , KC_LSFT , KC_LCTL , KC_LALT , KC_LGUI , XXXXXXX,
-  //|------+------+-------+-------+-------+-------|                |------+------+------+------+------+------|
-    XXXXXXX, KC_F10  , KC_F1   , KC_F2   , KC_F3   , KC_PAUS,        XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX , XXXXXXX,
-  //|------+------+-------+-------+-------+-------+------|  |------+------+------+------+------+------+------|
-                                    KC_APP  , KC_SPC  , KC_TAB,   XXXXXXX , XXXXXXX , XXXXXXX
-                                  //`--------------------'  `--------------------'
-  )
+  [LAYER_SYMBOLS] = LAYOUT_wrapper(CRKBD_WRAP(
+    LAYOUT_LAYER_SYMBOLS,
+    _______, _______, _______,  _______, _______, _______,
+    KC_LPRN, KC_RPRN, KC_UNDS,  _______, XXXXXXX, XXXXXXX)),
 };
-
-int RGB_current_mode;
+// clang-format on
 
 #ifdef OLED_ENABLE
 oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_270; }
@@ -135,25 +65,22 @@ void render_space(void) {
 
 void render_layer_state(void) {
     switch (get_highest_layer(layer_state | default_layer_state)) {
-        case _COLEMAK:
+        case LAYER_BASE:
             oled_write_ln_P(PSTR("Base \n"), false);
             break;
-        case _NAV:
+        case LAYER_NAVIGATION:
             oled_write_ln_P(PSTR("Nav  \n"), false);
             break;
-        case _MOUSE:
-            oled_write_ln_P(PSTR("Mouse\n"), false);
-            break;
-        case _MEDIA:
+        case LAYER_MEDIA:
             oled_write_ln_P(PSTR("Media\n"), false);
             break;
-        case _NUM:
+        case LAYER_NUMERAL:
             oled_write_ln_P(PSTR("Num  \n"), false);
             break;
-        case _FUN:
+        case LAYER_FUNCTION:
             oled_write_ln_P(PSTR("Fun  \n"), false);
             break;
-        case _SYM:
+        case LAYER_SYMBOLS:
             oled_write_ln_P(PSTR("Sym  \n"), false);
             break;
         default:
@@ -304,8 +231,8 @@ void render_logo(void) {
 }
 
 void render_state(void) {
-    uint8_t led_usb_state = host_keyboard_leds();
-    oled_write_P(IS_LED_ON(led_usb_state, USB_LED_CAPS_LOCK)   ? PSTR("CAPS ") : PSTR("     "), false);
+    led_t led_state = host_keyboard_led_state();
+    oled_write_P(led_state.caps_lock ? PSTR("CAPS ") : PSTR("     "), false);
 }
 
 bool oled_task_user(void) {

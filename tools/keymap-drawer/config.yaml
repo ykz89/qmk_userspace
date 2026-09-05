@@ -1,0 +1,18 @@
+# Shared keymap-drawer style (see draw.py): each layer's activator, held key
+# and title share a colour, matching the le_chiffre's layer indicator LED.
+draw_config:
+  svg_extra_style: |
+    .key.fun rect   { fill: #f9d6d5; stroke: #c0392b; }
+    .key.nav rect   { fill: #d5f0d9; stroke: #27ae60; }
+    .key.media rect { fill: #d6e4fa; stroke: #2e6fd6; }
+    .key.num rect   { fill: #fbf0c4; stroke: #c9a200; }
+    .key.sym rect   { fill: #e9d8f7; stroke: #8e44ad; }
+    .key.ptr rect   { fill: #fde3cf; stroke: #e67e22; }
+    .key.held rect  { stroke-width: 3; stroke-dasharray: 5 3; }
+    .combo.media rect { fill: #d6e4fa; stroke: #2e6fd6; }
+    .layer-Fun   .label { fill: #c0392b; }
+    .layer-Nav   .label { fill: #27ae60; }
+    .layer-Media .label { fill: #2e6fd6; }
+    .layer-Num   .label { fill: #c9a200; }
+    .layer-Sym   .label { fill: #8e44ad; }
+    .layer-Ptr   .label { fill: #e67e22; }

@@ -1,15 +1,16 @@
 {
-    "userspace_version": "1.0",
+    "userspace_version": "1.1",
     "build_targets": [
+        // Splinky controllers are RP2040_CE pinout: build the AVR board with the converter.
         // ["aki27/cocot46plus", "default"],
         // ["aki27/cocot46plus", "rp2040"],
-        // ["bastardkb/charybdis/3x5/v2/splinky_3", "ykz89"],
+        // ["bastardkb/charybdis/3x5/elitec", "ykz89", {"CONVERT_TO": "rp2040_ce"}],
         // ["bastardkb/dilemma/4x6_4", "ykz89"],
         // ["bastardkb/dilemma/3x5_3_procyon", "ykz89"],
-        // ["bastardkb/dilemma/3x5_2/splinky", "ykz89"],
-        // ["bastardkb/skeletyl/v2/splinky_3", "ykz89"],
+        // ["bastardkb/dilemma/3x5_2/promicro", "ykz89", {"CONVERT_TO": "rp2040_ce"}],
+        // ["bastardkb/skeletyl/promicro", "ykz89", {"CONVERT_TO": "rp2040_ce"}],
         // ["crkbd/rev1", "ykz89"],
         // ["testamatta/sunflower/000/xiao_rp2040", "via"],
-        ["sporkus/le_chiffre_32", "ykz89"]
+        ["sporkus/le_chiffre_stm32", "ykz89"]
     ]
 }

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(qmk --version)",
+      "Bash(qmk config *)",
+      "Bash(qmk compile *)",
+      "Read(//home/yingkunzhan/qmk_firmware/keyboards/**)",
+      "Read(//home/yingkunzhan/qmk_firmware/keyboards/crkbd/**)",
+      "Bash(qmk userspace-compile *)",
+      "Read(//home/yingkunzhan/qmk_firmware/**)",
+      "Bash(git -C /home/yingkunzhan/qmk_firmware describe --tags)",
+      "Bash(gcc -E -P -nostdinc /tmp/claude-1000/-home-yingkunzhan-Documents-repositories-qmk-userspace/b611a85d-9c06-4207-b4c2-f4037df05b24/scratchpad/cnt.c)",
+      "Bash(awk '/PROBE_START/{f=1;next}/PROBE_END/{f=0}f')",
+      "Bash(cp /tmp/claude-1000/-home-yingkunzhan-Documents-repositories-qmk-userspace/b611a85d-9c06-4207-b4c2-f4037df05b24/scratchpad/cnt2.c /tmp/claude-1000/-home-yingkunzhan-Documents-repositories-qmk-userspace/b611a85d-9c06-4207-b4c2-f4037df05b24/scratchpad/cnt4.c)",
+      "Bash(sed -i 's/#define CRKBD_WRAP\\(...\\) _CRKBD_WRAP\\(__VA_ARGS__\\)/#define CRKBD_WRAP\\(...\\) __VA_ARGS__/' /tmp/claude-1000/-home-yingkunzhan-Documents-repositories-qmk-userspace/b611a85d-9c06-4207-b4c2-f4037df05b24/scratchpad/cnt4.c)",
+      "Bash(gcc -E -P -nostdinc /tmp/claude-1000/-home-yingkunzhan-Documents-repositories-qmk-userspace/b611a85d-9c06-4207-b4c2-f4037df05b24/scratchpad/cnt4.c)",
+      "Bash(git ls-tree *)",
+      "Bash(curl -sfL \"https://api.github.com/repos/george-norton/qmk_userspace/contents/keyboards/bastardkb/dilemma/3x5_3_procyon?ref=bkb-procyon\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(f\\\\\"{x['type']}\\\\t{x['name']}\\\\t{x.get\\('size',''\\)}\\\\\"\\) for x in d]\")"
+    ]
+  }
+}
