@@ -9,6 +9,7 @@ trackball keymap's layer callbacks, then renders each scenario. Needs gcc and Pi
     tools/led-matrix-sim/run.py -D LED_MATRIX_MODULE_WAVE_RAINBOW_SPAN=1   # try a setting
     tools/led-matrix-sim/run.py --style stars roll_right   # a trackball animation by name
     tools/led-matrix-sim/run.py --compare     # every animation on the trackball scenarios
+    tools/led-matrix-sim/run.py --docs        # the module README's GIFs
 
 Output: tools/led-matrix-sim/out/<scenario>[-<style>].gif and index.html.
 -D overrides any LED_MATRIX_MODULE_* setting in post_config.h, to tune before reflashing.
@@ -85,27 +86,38 @@ def read_frames(path):
     return cols, rows, frames
 
 
-def render(cols, rows, pixels):
-    w, h = 2 * PAD + cols * CELL + (cols - 1) * GAP, 2 * PAD + rows * CELL + (rows - 1) * GAP
+# --docs: the module README's GIFs as (file, scenario, style, from ms, to ms).
+DOCS = [
+    ('sparks', 'circle', 'sparks', 300, 3800), ('fireworks', 'roll_then_rest', 'fireworks', 300, 3300),
+    ('ocean', 'circle', 'ocean', 300, 3800), ('asteroids', 'circle', 'asteroids', 300, 4300),
+    ('matrix', 'idle_long', 'matrix', 0, 4000), ('tetris', 'idle_30s', 'tetris', 0, 13700),
+    ('badapple', 'idle_30s', 'badapple', 15000, 25000),
+    *[(f'layer_{l}', f'layer_{l}', None, 300, 2800) for l in ('fun', 'nav', 'media', 'ptr', 'num', 'sym')],
+]
+DOCS_DIR = MODULE / 'docs'
+
+
+def render(cols, rows, pixels, cell=CELL, gap=GAP, pad=PAD):
+    w, h = 2 * pad + cols * cell + (cols - 1) * gap, 2 * pad + rows * cell + (rows - 1) * gap
     img = Image.new('RGB', (w, h), BG)
     d = ImageDraw.Draw(img)
     for y in range(rows):
         for x in range(cols):
             i = (y * cols + x) * 3
             rgb = tuple(pixels[i:i + 3])
-            x0, y0 = PAD + x * (CELL + GAP), PAD + y * (CELL + GAP)
-            d.rounded_rectangle([x0, y0, x0 + CELL - 1, y0 + CELL - 1], radius=5, fill=rgb if any(rgb) else OFF)
+            x0, y0 = pad + x * (cell + gap), pad + y * (cell + gap)
+            d.rounded_rectangle([x0, y0, x0 + cell - 1, y0 + cell - 1], radius=cell // 4, fill=rgb if any(rgb) else OFF)
     return img
 
 
-def gif(name, cols, rows, frames):
+def gif(name, cols, rows, frames, out=OUT, **size):
     """One GIF frame per painted frame, each shown until the next one was painted."""
     images, durations = [], []
     for k, (t, px) in enumerate(frames):
         nxt = frames[k + 1][0] if k + 1 < len(frames) else t + 500
-        images.append(render(cols, rows, px))
+        images.append(render(cols, rows, px, **size))
         durations.append(max(20, nxt - t))  # browsers clamp GIF frames below 20 ms
-    path = OUT / f'{name}.gif'
+    path = out / f'{name}.gif'
     images[0].save(path, save_all=True, append_images=images[1:], duration=durations, loop=0, disposal=1)
     return path
 
@@ -141,9 +153,20 @@ def main():
                     help='override a LED_MATRIX_MODULE_* setting')
     ap.add_argument('--style', action='append', default=[], help='trackball animation(s) to use (default: the module\'s)')
     ap.add_argument('--compare', action='store_true', help='every animation, on the trackball scenarios')
+    ap.add_argument('--docs', action='store_true', help=f'write the README GIFs to {DOCS_DIR.relative_to(ROOT)}')
     args = ap.parse_args()
 
     binary = build(args.defines)
+    if args.docs:
+        DOCS_DIR.mkdir(exist_ok=True)
+        for name, scenario, style, t0, t1 in DOCS:
+            raw = OUT / 'build' / f'docs-{name}.bin'
+            subprocess.run([str(binary), scenario, str(raw)] + ([style] if style else []), check=True, capture_output=True)
+            cols, nrows, frames = read_frames(raw)
+            frames = [f for f in frames if t0 <= f[0] - 1000 < t1]
+            path = gif(name, cols, nrows, frames, out=DOCS_DIR, cell=10, gap=2, pad=6)
+            print(f'{path.relative_to(ROOT)}: {len(frames)} frames, {path.stat().st_size // 1024} KB')
+        return
     ask = lambda flag: subprocess.run([str(binary), flag], capture_output=True, text=True, check=True).stdout.split()
     known, styles = ask('--list'), ask('--styles')
     todo = args.scenarios or ([s for s in known if s.startswith(('roll', 'slow', 'circle'))] if args.compare else known)
