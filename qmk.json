@@ -7,6 +7,8 @@
         // ["bastardkb/charybdis/3x5/elitec", "ykz89", {"CONVERT_TO": "rp2040_ce"}],
         // ["bastardkb/dilemma/4x6_4", "ykz89"],
         // ["bastardkb/dilemma/3x5_3_procyon", "ykz89"],
+        // Board exists only on the qmk_firmware `bastardkb` branch: build from the ../qmk_firmware-bastardkb worktree.
+        // ["bastardkb/dilemma/3x5_3_trackball", "ykz89"],
         // ["bastardkb/dilemma/3x5_2/promicro", "ykz89", {"CONVERT_TO": "rp2040_ce"}],
         // ["bastardkb/skeletyl/promicro", "ykz89", {"CONVERT_TO": "rp2040_ce"}],
         // ["crkbd/rev1", "ykz89"],
