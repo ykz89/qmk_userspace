@@ -9,6 +9,7 @@ layer names, readable legends, layer-binding colours and thumb chords, then
     tools/keymap-drawer/draw.py            # all boards
     tools/keymap-drawer/draw.py crkbd/rev1 # one board
 """
+import json
 import re
 import subprocess
 import sys
@@ -21,7 +22,9 @@ ROOT = Path(__file__).resolve().parents[2]
 CONFIG = Path(__file__).with_name('config.yaml')
 
 # Key indices in LAYOUT order. thumbs: key held for a layer (list = chord);
-# ptr: pointer-layer LT keys; chord_l/chord_r: thumb chords (ykz89_combos.c).
+# ptr: pointer-layer LT keys; chord_l/chord_r: thumb chords (ykz89_combos.c);
+# qmk_home: QMK tree (relative to the userspace) when the board isn't in the default one;
+# x_fix: {key index: x} corrections to the board's physical layout.
 BOARDS = {
     'sporkus/le_chiffre_stm32': dict(
         keymap='keyboards/sporkus/le_chiffre_stm32/keymaps/ykz89', pointing=False,
@@ -41,6 +44,14 @@ BOARDS = {
     'bastardkb/dilemma/4x6_4': dict(
         keymap='keyboards/bastardkb/dilemma/4x6_4/keymaps/ykz89', pointing=True,
         thumbs={'Media': 49, 'Nav': 50, 'Fun': 51, 'Sym': 52, 'Num': 53}, ptr=[37, 46]),
+    # Board exists only on the qmk_firmware `bastardkb` branch, so qmk runs in that worktree.
+    'bastardkb/dilemma/3x5_3_trackball': dict(
+        keymap='keyboards/bastardkb/dilemma/3x5_3_trackball/keymaps/ykz89', pointing=True,
+        thumbs={'Media': 30, 'Nav': 31, 'Fun': 32, 'Sym': 33, 'Num': 34}, ptr=[20, 29],
+        qmk_home='../qmk_firmware-bastardkb',
+        # keyboard.json draws the right thumbs mirrored (x 11, 10, 9); its RGB
+        # matrix and the vendor keymap put [7,1] (key 33, Enter) innermost.
+        x_fix={33: 9, 35: 11}),
     'crkbd/rev1': dict(
         keymap='keyboards/crkbd/keymaps/ykz89', pointing=False,
         thumbs={'Media': 36, 'Nav': 37, 'Fun': 38, 'Sym': 39, 'Num': 40}),
@@ -62,6 +73,7 @@ LABEL = {
     'LGUI': 'Gui', 'RGUI': 'Gui', 'LALT': 'Alt', 'RALT': 'AltGr', 'LCTL': 'Ctrl', 'RCTL': 'Ctrl', 'LSFT': 'Shift', 'RSFT': 'Shift',
     'MS BTN1': 'Btn1', 'MS BTN2': 'Btn2', 'MS BTN3': 'Btn3', 'MS WHLU': 'Whl↑', 'MS WHLD': 'Whl↓',
     'DPI MOD': 'DPI', 'S D MOD': 'Snipe DPI', 'DRGSCRL': 'Drag Scrl', 'SNIPING': 'Snipe',
+    'LM ANIM': {'t': 'LED Anim', 's': '⇧ back'},
     'TD(TD MUTE PLAY)': {'t': 'Slack Mute', 'h': 'Mic Mute', 's': '⏯ ×2'},
 }
 LT_RE = re.compile(r'LT\(LAYER (\w+),(.+)\)')
@@ -88,9 +100,20 @@ def run(*cmd, **kw):
 def draw(board, spec, work):
     kdir = ROOT / spec['keymap']
     info = work / 'info.json'
-    info.write_text(run('qmk', 'info', '-kb', board, '-f', 'json'))
+    home = ROOT / spec['qmk_home'] if 'qmk_home' in spec else None  # qmk uses the tree it runs in
+    info.write_text(run('qmk', 'info', '-kb', board, '-f', 'json', cwd=home))
+    if 'x_fix' in spec:
+        ij = json.loads(info.read_text())
+        keys = ij['layouts'][next(iter(ij['layouts']))]['layout']
+        for i, x in spec['x_fix'].items():
+            keys[i]['x'] = x
+        info.write_text(json.dumps(ij))
     stub = work / 'stub'; stub.mkdir(exist_ok=True); (stub / 'quantum.h').touch()
     defs = ['-DRGB_MATRIX_ENABLE'] + (['-DPOINTING_DEVICE_ENABLE'] if spec['pointing'] else [])
+    # Community modules the keymap loads, so keys they add (e.g. LM_ANIM) are drawn.
+    kj = kdir / 'keymap.json'
+    if kj.exists():
+        defs += [f'-DCOMMUNITY_MODULE_{m.split("/")[-1].upper()}_ENABLE' for m in json.loads(kj.read_text()).get('modules', [])]
     cpp = ['cpp', '-P', f'-I{kdir}', f'-I{ROOT}/users/ykz89', f'-I{stub}', '-DQMK_KEYBOARD_H="quantum.h"', *defs]
     src = (kdir / 'keymap.c').read_text()
 
@@ -107,7 +130,7 @@ def draw(board, spec, work):
     pp = work / 'keymap_pp.c'
     pp.write_text(run(*cpp, '-', input=src))
     kjson = work / 'keymap.json'
-    run('qmk', 'c2json', '--no-cpp', '-kb', board, '-km', 'ykz89', '-o', str(kjson), str(pp))
+    run('qmk', 'c2json', '--no-cpp', '-kb', board, '-km', 'ykz89', '-o', str(kjson), str(pp), cwd=home)
     d = yaml.safe_load(run('keymap', 'parse', '-c', '10', '-q', str(kjson)))
 
     names = LAYER_NAMES[spec['pointing']]
