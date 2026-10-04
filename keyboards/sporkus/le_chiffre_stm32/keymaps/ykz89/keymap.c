@@ -119,10 +119,15 @@ tap_dance_action_t tap_dance_actions[] = {
 #define LC_WRAP(...) LC_WRAP_IMPL(__VA_ARGS__)
 #define LAYOUT_wrapper(...) LAYOUT(__VA_ARGS__)
 
+// Base thumb row; its innermost key per hand places QK_BOOT/EE_CLR (see ykz89.h).
+#define THUMBS_BASE  TAB_FUN, SPC_NAV, BSP_NUM, ENT_SYM
+#define THUMB_TUCK_L THUMB_PICK(1, THUMBS_BASE)
+#define THUMB_TUCK_R THUMB_PICK(2, THUMBS_BASE)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [LAYER_BASE] = LAYOUT_wrapper(LC_WRAP(
     HOME_ROW_MOD_GACS(LAYOUT_LAYER_BASE),
-    MUTE_PLAY, TAB_FUN, SPC_NAV, BSP_NUM, ENT_SYM)),
+    MUTE_PLAY, THUMBS_BASE)),
   [LAYER_FUNCTION]   = LAYOUT_wrapper(LC_WRAP(LAYOUT_LAYER_FUNCTION,   _______, _______, XXXXXXX, XXXXXXX, XXXXXXX)),
   [LAYER_NAVIGATION] = LAYOUT_wrapper(LC_WRAP(LAYOUT_LAYER_NAVIGATION, _______, XXXXXXX, _______, KC_BSPC,  KC_ENT)),
   [LAYER_MEDIA]      = LAYOUT_wrapper(LC_WRAP(LAYOUT_LAYER_MEDIA,      _______, KC_MSTP, KC_MPLY, KC_MPLY, KC_MSTP)),

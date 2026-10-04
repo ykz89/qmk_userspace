@@ -39,8 +39,8 @@ layers:
     - {t: Bspc, h: Num, type: num}
     - {t: Enter, h: Sym, type: sym}
   Fun:
-  - - Boot
-    - EE Clr
+  - - ''
+    - ''
     - ''
     - ''
     - ''
@@ -57,8 +57,8 @@ layers:
     - ''
     - ''
   Nav:
-  - - ''
-    - ''
+  - - Boot
+    - EE Clr
     - ''
     - ''
     - ''
@@ -102,8 +102,8 @@ layers:
     - ''
     - ''
     - ''
-    - ''
-  - ['', ;, '4', '5', '6', '=', '', Shift, Ctrl, Alt]
+    - EE Clr
+  - [Boot, ;, '4', '5', '6', '=', '', Shift, Ctrl, Alt]
   - [Gui, '`', '1', '2', '3', \, '', '', '', '']
   - - ''
     - '-'
@@ -120,8 +120,8 @@ layers:
     - ''
     - ''
     - ''
-    - EE Clr
-  - [Boot, ':', $, '%', ^, +, '', Shift, Ctrl, Alt]
+    - ''
+  - ['', ':', $, '%', ^, +, '', Shift, Ctrl, Alt]
   - [Gui, '~', '!', '@', '#', '|', '', '', '', '']
   - - ''
     - _

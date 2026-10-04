@@ -91,8 +91,21 @@ def draw(board, spec, work):
     info.write_text(run('qmk', 'info', '-kb', board, '-f', 'json'))
     stub = work / 'stub'; stub.mkdir(exist_ok=True); (stub / 'quantum.h').touch()
     defs = ['-DRGB_MATRIX_ENABLE'] + (['-DPOINTING_DEVICE_ENABLE'] if spec['pointing'] else [])
+    cpp = ['cpp', '-P', f'-I{kdir}', f'-I{ROOT}/users/ykz89', f'-I{stub}', '-DQMK_KEYBOARD_H="quantum.h"', *defs]
+    src = (kdir / 'keymap.c').read_text()
+
+    # TUCK_L/TUCK_R (ykz89.h) are C expressions c2json can't read: ask cpp which
+    # layer each tuck thumb holds, then redefine them to plain keycodes.
+    probe = work / 'tuck_probe.c'
+    probe.write_text(src + '\n@TUCK THUMB_TUCK_L THUMB_TUCK_R\n')
+    tuck = re.findall(r'LT\(LAYER_(\w+),', run(*cpp, str(probe)).split('@TUCK')[-1])
+    assert len(tuck) == 2, f'{board}: could not resolve THUMB_TUCK_L/R'
+    resolve = '\n'.join(f'#undef TUCK_{s}\n#define TUCK_{s}(layer, kc) TUCK_{s}_##layer(kc)\n'
+                        + ''.join(f'#define TUCK_{s}_LAYER_{l}(kc) {"kc" if l == t else "XXXXXXX"}\n' for l in LAYER_SHORT)
+                        for s, t in zip('LR', tuck))
+    src = src.replace('#include "ykz89.h"\n', '#include "ykz89.h"\n' + resolve, 1)
     pp = work / 'keymap_pp.c'
-    pp.write_text(run('cpp', '-P', f'-I{ROOT}/users/ykz89', f'-I{stub}', '-DQMK_KEYBOARD_H="quantum.h"', *defs, str(kdir / 'keymap.c')))
+    pp.write_text(run(*cpp, '-', input=src))
     kjson = work / 'keymap.json'
     run('qmk', 'c2json', '--no-cpp', '-kb', board, '-km', 'ykz89', '-o', str(kjson), str(pp))
     d = yaml.safe_load(run('keymap', 'parse', '-c', '10', '-q', str(kjson)))

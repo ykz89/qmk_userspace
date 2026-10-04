@@ -23,11 +23,16 @@
 #define CRKBD_WRAP(...) _CRKBD_WRAP(__VA_ARGS__)
 #define LAYOUT_wrapper(...) LAYOUT_split_3x6_3(__VA_ARGS__)
 
+// Base thumb row; its innermost key per hand places QK_BOOT/EE_CLR (see ykz89.h).
+#define THUMBS_BASE  ESC_MED, SPC_NAV, TAB_FUN, ENT_SYM, BSP_NUM, KC_DEL
+#define THUMB_TUCK_L THUMB_PICK(2, THUMBS_BASE)
+#define THUMB_TUCK_R THUMB_PICK(3, THUMBS_BASE)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [LAYER_BASE] = LAYOUT_wrapper(CRKBD_WRAP(
     HOME_ROW_MOD_GACS(LAYOUT_LAYER_BASE),
     KC_TAB, KC_LSFT, KC_LCTL,   KC_MINS, KC_SCLN, KC_LSFT,
-    ESC_MED, SPC_NAV, TAB_FUN,  ENT_SYM, BSP_NUM, KC_DEL)),
+    THUMBS_BASE)),
 
   [LAYER_FUNCTION] = LAYOUT_wrapper(CRKBD_WRAP(
     LAYOUT_LAYER_FUNCTION,

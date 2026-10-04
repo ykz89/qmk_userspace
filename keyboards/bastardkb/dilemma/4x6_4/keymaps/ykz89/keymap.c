@@ -31,12 +31,17 @@
 #define ____NUM_ROW____    KC_ESC, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS
 #define ____NUM_ROW_T____  _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
 
+// Base thumb row; its innermost key per hand places QK_BOOT/EE_CLR (see ykz89.h).
+#define THUMBS_BASE  KC_LALT, ESC_MED, SPC_NAV, TAB_FUN, ENT_SYM, BSP_NUM, KC_DEL, KC_MUTE
+#define THUMB_TUCK_L THUMB_PICK(3, THUMBS_BASE)
+#define THUMB_TUCK_R THUMB_PICK(4, THUMBS_BASE)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [LAYER_BASE] = LAYOUT_wrapper(D4X6_WRAP(
     POINTER_MOD(HOME_ROW_MOD_GACS(LAYOUT_LAYER_BASE)),
     ____NUM_ROW____,
     KC_TAB, KC_LSFT, KC_LCTL,   KC_BSLS, KC_QUOT, KC_LALT,
-    KC_LALT, ESC_MED, SPC_NAV, TAB_FUN,   ENT_SYM, BSP_NUM, KC_DEL, KC_MUTE)),
+    THUMBS_BASE)),
 
   [LAYER_FUNCTION] = LAYOUT_wrapper(D4X6_WRAP(
     LAYOUT_LAYER_FUNCTION,

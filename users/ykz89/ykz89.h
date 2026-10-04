@@ -50,6 +50,37 @@ enum ykz89_layers {
 #    define LT_PTR(KC) KC
 #endif
 
+/**
+ * Bootloader + EEPROM clear follow the innermost (tuckiest) thumb on each hand:
+ * they go on that thumb's layer, top row of the same hand, outer corner first.
+ * Each keymap.c names its base thumb row and the two innermost positions in it:
+ *
+ *   #define THUMBS_BASE  ESC_MED, SPC_NAV, TAB_FUN, ENT_SYM, BSP_NUM, KC_DEL
+ *   #define THUMB_TUCK_L THUMB_PICK(2, THUMBS_BASE)
+ *   #define THUMB_TUCK_R THUMB_PICK(3, THUMBS_BASE)
+ *
+ * The left tuck thumb must hold FUNCTION or NAVIGATION, the right NUMERAL or
+ * SYMBOLS (the layers with a free top row on that hand); anything else fails
+ * to compile via TUCK_REQUIRE's negative array size.
+ */
+#define THUMB_PICK_0(a, ...) a
+#define THUMB_PICK_1(a, b, ...) b
+#define THUMB_PICK_2(a, b, c, ...) c
+#define THUMB_PICK_3(a, b, c, d, ...) d
+#define THUMB_PICK_4(a, b, c, d, e, ...) e
+#define THUMB_PICK_5(a, b, c, d, e, f, ...) f
+#define THUMB_PICK_6(a, b, c, d, e, f, g, ...) g
+#define THUMB_PICK_7(a, b, c, d, e, f, g, h, ...) h
+#define THUMB_PICK(n, ...) THUMB_PICK_##n(__VA_ARGS__)
+
+#define TUCK_HOLDS(thumb, layer) (IS_QK_LAYER_TAP(thumb) && QK_LAYER_TAP_GET_LAYER(thumb) == (layer))
+#define TUCK_REQUIRE(cond) (0 * sizeof(char[(cond) ? 1 : -1]))
+#define TUCK_OK_L (TUCK_HOLDS(THUMB_TUCK_L, LAYER_FUNCTION) || TUCK_HOLDS(THUMB_TUCK_L, LAYER_NAVIGATION))
+#define TUCK_OK_R (TUCK_HOLDS(THUMB_TUCK_R, LAYER_NUMERAL) || TUCK_HOLDS(THUMB_TUCK_R, LAYER_SYMBOLS))
+/** `kc` if `layer` is held by the left (right) tuck thumb, else XXXXXXX. */
+#define TUCK_L(layer, kc) (TUCK_REQUIRE(TUCK_OK_L) + (TUCK_HOLDS(THUMB_TUCK_L, layer) ? (kc) : XXXXXXX))
+#define TUCK_R(layer, kc) (TUCK_REQUIRE(TUCK_OK_R) + (TUCK_HOLDS(THUMB_TUCK_R, layer) ? (kc) : XXXXXXX))
+
 // Aliases for keycodes QMK has renamed, so the layers below read unchanged.
 // Older trees (vial-qmk) still define some as legacy aliases; drop those first.
 #undef KC_BTN1
@@ -129,6 +160,9 @@ enum ykz89_layers {
 #define _______________DEAD_HALF_ROW_______________ XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX
 #define ______________HOME_ROW_GACS_L______________ KC_LGUI, KC_LALT, KC_LCTL, KC_LSFT, XXXXXXX
 #define ______________HOME_ROW_GACS_R______________ XXXXXXX, KC_LSFT, KC_LCTL, KC_LALT, KC_LGUI
+/** Top half-rows that hold QK_BOOT + EE_CLR (outer corner first) when `layer` is the tuck thumb's, else dead. */
+#define BOOT_HALF_ROW_L(layer) TUCK_L(layer, QK_BOOT), TUCK_L(layer, EE_CLR), XXXXXXX, XXXXXXX, XXXXXXX
+#define BOOT_HALF_ROW_R(layer) XXXXXXX, XXXXXXX, XXXXXXX, TUCK_R(layer, EE_CLR), TUCK_R(layer, QK_BOOT)
 
 /*
  * Layer cores (3 rows x 10 columns, no thumbs). These are identical on every
@@ -144,15 +178,15 @@ enum ykz89_layers {
        KC_A,         KC_R,    KC_S,    KC_T,    KC_G,    KC_M,    KC_N,    KC_E,         KC_I, KC_O,    \
        KC_Z, RALT_T(KC_X),    KC_C,    KC_D,    KC_V,    KC_K,    KC_H, KC_COMM, RALT_T(KC_DOT), KC_SLSH
 
-/** \brief Function layer: F-keys + system keys mirroring the numeral layout; bootloader + EEPROM clear on the top-left keys. */
+/** \brief Function layer: F-keys + system keys mirroring the numeral layout; boot keys top-left if its thumb is the tuckiest. */
 #define LAYOUT_LAYER_FUNCTION                                                                 \
-    QK_BOOT,  EE_CLR, XXXXXXX, XXXXXXX, XXXXXXX, KC_PSCR,   KC_F7,   KC_F8,   KC_F9,  KC_F12, \
+    BOOT_HALF_ROW_L(LAYER_FUNCTION)              , KC_PSCR,   KC_F7,   KC_F8,   KC_F9,  KC_F12, \
     ______________HOME_ROW_GACS_L______________, KC_SCRL,   KC_F4,   KC_F5,   KC_F6,  KC_F11, \
     _______________DEAD_HALF_ROW_______________, KC_PAUS,   KC_F1,   KC_F2,   KC_F3,  KC_F10
 
-/** \brief Navigation layer: arrows on the home position, caps-word on the inner column. */
+/** \brief Navigation layer: arrows on the home position, caps-word on the inner column; boot keys top-left if its thumb is the tuckiest. */
 #define LAYOUT_LAYER_NAVIGATION                                                               \
-    _______________DEAD_HALF_ROW_______________, _______________DEAD_HALF_ROW_______________, \
+    BOOT_HALF_ROW_L(LAYER_NAVIGATION)            , _______________DEAD_HALF_ROW_______________, \
     ______________HOME_ROW_GACS_L______________, CW_TOGG, KC_LEFT, KC_DOWN,   KC_UP, KC_RGHT, \
     _______________DEAD_HALF_ROW_______________,  KC_INS, KC_HOME, KC_PGDN, KC_PGUP,  KC_END
 
@@ -174,15 +208,15 @@ enum ykz89_layers {
     ______________HOME_ROW_GACS_L______________, ______________HOME_ROW_GACS_R______________, \
     _______, DRGSCRL, SNIPING, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, SNIPING, DRGSCRL, _______
 
-/** \brief Numerals in numpad positions with symbols around them. */
+/** \brief Numerals in numpad positions with symbols around them; boot keys top-right if its thumb is the tuckiest. */
 #define LAYOUT_LAYER_NUMERAL                                                                  \
-    KC_LBRC,    KC_7,    KC_8,    KC_9, KC_RBRC, _______________DEAD_HALF_ROW_______________, \
+    KC_LBRC,    KC_7,    KC_8,    KC_9, KC_RBRC, BOOT_HALF_ROW_R(LAYER_NUMERAL)               , \
     KC_SCLN,    KC_4,    KC_5,    KC_6,  KC_EQL, ______________HOME_ROW_GACS_R______________, \
      KC_GRV,    KC_1,    KC_2,    KC_3, KC_BSLS, _______________DEAD_HALF_ROW_______________
 
-/** \brief Shifted symbols mirroring the numeral positions; bootloader + EEPROM clear on the top-right keys. */
+/** \brief Shifted symbols mirroring the numeral positions; boot keys top-right if its thumb is the tuckiest. */
 #define LAYOUT_LAYER_SYMBOLS                                                                  \
-    KC_LCBR, KC_AMPR, KC_ASTR, KC_LPRN, KC_RCBR, XXXXXXX, XXXXXXX, XXXXXXX,  EE_CLR, QK_BOOT, \
+    KC_LCBR, KC_AMPR, KC_ASTR, KC_LPRN, KC_RCBR, BOOT_HALF_ROW_R(LAYER_SYMBOLS)               , \
     KC_COLN,  KC_DLR, KC_PERC, KC_CIRC, KC_PLUS, ______________HOME_ROW_GACS_R______________, \
     KC_TILD, KC_EXLM,   KC_AT, KC_HASH, KC_PIPE, _______________DEAD_HALF_ROW_______________
 
