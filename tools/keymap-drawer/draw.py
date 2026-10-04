@@ -113,7 +113,8 @@ def draw(board, spec, work):
     # Community modules the keymap loads, so keys they add (e.g. LM_ANIM) are drawn.
     kj = kdir / 'keymap.json'
     if kj.exists():
-        defs += [f'-DCOMMUNITY_MODULE_{m.split("/")[-1].upper()}_ENABLE' for m in json.loads(kj.read_text()).get('modules', [])]
+        for m in json.loads(kj.read_text()).get('modules', []):
+            defs += [f'-DCOMMUNITY_MODULE_{m.split("/")[-1].upper()}_ENABLE', f'-I{ROOT}/modules/{m}']
     cpp = ['cpp', '-P', f'-I{kdir}', f'-I{ROOT}/users/ykz89', f'-I{stub}', '-DQMK_KEYBOARD_H="quantum.h"', *defs]
     src = (kdir / 'keymap.c').read_text()
 
