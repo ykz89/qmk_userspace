@@ -10,6 +10,7 @@ trackball keymap's callbacks, sources and LED matrix settings, then renders each
     tools/led-matrix-sim/run.py --style ocean roll_right   # a trackball animation by name
     tools/led-matrix-sim/run.py --compare     # every animation on the trackball scenarios
     tools/led-matrix-sim/run.py --docs        # the module README's GIFs
+    tools/led-matrix-sim/run.py --keymap-docs # the trackball keymap README's GIFs
 
 Output: tools/led-matrix-sim/out/<scenario>[-<style>].gif and index.html.
 -D overrides any LED_MATRIX_MODULE_* setting in post_config.h, to tune before reflashing.
@@ -105,6 +106,12 @@ DOCS = [
 ]
 DOCS_DIR = MODULE / 'docs'
 
+# --keymap-docs: the trackball keymap README's GIFs of its custom animations, same format.
+KEYMAP_DOCS = [
+    ('badapple', 'idle_30s', 'user0', 15000, 25000), ('doomfire', 'circle', 'user1', 300, 4300),
+]
+KEYMAP_DOCS_DIR = KEYMAP.parent / 'docs'
+
 
 def render(cols, rows, pixels, cell=CELL, gap=GAP, pad=PAD):
     w, h = 2 * pad + cols * cell + (cols - 1) * gap, 2 * pad + rows * cell + (rows - 1) * gap
@@ -163,17 +170,21 @@ def main():
     ap.add_argument('--style', action='append', default=[], help='trackball animation(s) to use (default: the module\'s)')
     ap.add_argument('--compare', action='store_true', help='every animation, on the trackball scenarios')
     ap.add_argument('--docs', action='store_true', help=f'write the README GIFs to {DOCS_DIR.relative_to(ROOT)}')
+    ap.add_argument('--keymap-docs', action='store_true', help=f'write the keymap README GIFs to {KEYMAP_DOCS_DIR.relative_to(ROOT)}')
     args = ap.parse_args()
 
-    binary = build(args.defines, keymap_settings=not args.docs)
-    if args.docs:
-        DOCS_DIR.mkdir(exist_ok=True)
-        for name, scenario, style, t0, t1 in DOCS:
+    # The keymap's GIFs keep its animations running (no idle timeout), so a still ball shows them.
+    defines = args.defines + (['LED_MATRIX_MODULE_MOTION_IDLE_MS=0'] if args.keymap_docs else [])
+    binary = build(defines, keymap_settings=not args.docs)
+    if args.docs or args.keymap_docs:
+        docs, docs_dir = (DOCS, DOCS_DIR) if args.docs else (KEYMAP_DOCS, KEYMAP_DOCS_DIR)
+        docs_dir.mkdir(exist_ok=True)
+        for name, scenario, style, t0, t1 in docs:
             raw = OUT / 'build' / f'docs-{name}.bin'
             subprocess.run([str(binary), scenario, str(raw)] + ([style] if style else []), check=True, capture_output=True)
             cols, nrows, frames = read_frames(raw)
             frames = [f for f in frames if t0 <= f[0] - 1000 < t1]
-            path = gif(name, cols, nrows, frames, out=DOCS_DIR, cell=10, gap=2, pad=6)
+            path = gif(name, cols, nrows, frames, out=docs_dir, cell=10, gap=2, pad=6)
             print(f'{path.relative_to(ROOT)}: {len(frames)} frames, {path.stat().st_size // 1024} KB')
         return
     ask = lambda flag: subprocess.run([str(binary), flag], capture_output=True, text=True, check=True).stdout.split()
