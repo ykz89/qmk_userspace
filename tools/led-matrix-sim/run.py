@@ -2,7 +2,7 @@
 """Simulate the Dilemma's left-half LED matrix and render it as animated GIFs.
 
 Builds sim.c against the real modules/bastardkb/bk_led_matrix drawing code and the
-trackball keymap's layer callbacks, then renders each scenario. Needs gcc and Pillow.
+trackball keymap's callbacks, sources and LED matrix settings, then renders each scenario. Needs gcc and Pillow.
 
     tools/led-matrix-sim/run.py                      # every scenario
     tools/led-matrix-sim/run.py roll_right circle    # just these
@@ -39,8 +39,9 @@ def modes(path):
     return dict(re.findall(r'(MODE_\w+)\s*=\s*(\d+)', path.read_text()))
 
 
-def build(defines):
-    """Compile the simulator; returns the path of the binary."""
+def build(defines, keymap_settings=True):
+    """Compile the simulator; returns the path of the binary. keymap_settings: use the
+    keymap config.h's LED_MATRIX_MODULE_* values (not for the module's README GIFs)."""
     if modes(HERE / 'stub/bk_pointing_modes.h') != modes(REAL_MODES):
         sys.exit(f'stub/bk_pointing_modes.h no longer matches {REAL_MODES.relative_to(ROOT)}; update the stub')
 
@@ -57,14 +58,20 @@ def build(defines):
             sys.exit(f'no {sig[:-2].split()[-1]} in {KEYMAP.relative_to(ROOT)}')
     gen = HERE / 'out/build'
     gen.mkdir(parents=True, exist_ok=True)
+    includes = ''.join(f'#include "{h}"\n' for h in re.findall(r'^\s*#\s*include\s+"([^"]+)"', src, re.M))
     (gen / 'layer_names.c').write_text(f'// Generated from {KEYMAP.relative_to(ROOT)} by run.py.\n'
-                                       '#include "ykz89.h"\n#include "led_matrix_layer_anims.h"\n#include "led_matrix_motion.h"\n' + '\n'.join(funcs) + '\n')
+                                       '#include "led_matrix_motion.h"\n' + includes + '\n'.join(funcs) + '\n')
 
+    # The keymap's own sources (custom animations) and LED matrix settings.
     sources = [HERE / 'sim.c', gen / 'layer_names.c', QMK / 'quantum/color.c']
     sources += [p for p in sorted(MODULE.glob('*.c')) if p.name != 'led_matrix_display.c']
+    sources += [p for p in sorted(KEYMAP.parent.glob('*.c')) if p != KEYMAP]
+    settings = [] if not keymap_settings else re.findall(r'^#define (LED_MATRIX_MODULE_\w+) (.+?)\s*(?://.*)?$', (KEYMAP.parent / 'config.h').read_text(), re.M)
+    overridden = {d.split('=')[0] for d in defines}
+    defines = [f'{k}={v}' for k, v in settings if k != 'LED_MATRIX_MODULE_PIN' and k not in overridden] + list(defines)
     binary = gen / 'sim'
     cmd = ['gcc', '-std=gnu11', '-O1', '-Wall', '-Wno-unused-parameter', '-o', str(binary),
-           f'-I{HERE}/stub', f'-I{MODULE}', f'-I{ROOT}/users/ykz89', f'-I{QMK}/quantum', f'-I{QMK}/platforms',
+           f'-I{HERE}/stub', f'-I{MODULE}', f'-I{KEYMAP.parent}', f'-I{ROOT}/users/ykz89', f'-I{QMK}/quantum', f'-I{QMK}/platforms',
            '-DQMK_KEYBOARD_H="quantum.h"', '-DPOINTING_DEVICE_ENABLE',
            '-DCOMMUNITY_MODULE_BK_POINTING_DEVICE_ENABLE', '-DCOMMUNITY_MODULE_ARGOS_ENABLE',
            '-DCOMMUNITY_MODULE_BK_LED_MATRIX_ENABLE', '-DLED_MATRIX_MODULE_PIN=12',
@@ -158,7 +165,7 @@ def main():
     ap.add_argument('--docs', action='store_true', help=f'write the README GIFs to {DOCS_DIR.relative_to(ROOT)}')
     args = ap.parse_args()
 
-    binary = build(args.defines)
+    binary = build(args.defines, keymap_settings=not args.docs)
     if args.docs:
         DOCS_DIR.mkdir(exist_ok=True)
         for name, scenario, style, t0, t1 in DOCS:
