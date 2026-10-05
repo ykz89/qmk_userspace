@@ -34,3 +34,5 @@
 #define LED_MATRIX_MODULE_PIN GP12
 // One custom animation, Bad Apple!! (badapple.c), after the built-in ones.
 #define LED_MATRIX_MODULE_MOTION_USER_COUNT 1
+// Keep animating for 10 s after the ball stops, then the swimming duck shows.
+#define LED_MATRIX_MODULE_MOTION_IDLE_MS 10000
