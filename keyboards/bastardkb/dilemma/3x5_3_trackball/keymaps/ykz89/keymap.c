@@ -12,6 +12,7 @@
 #ifdef COMMUNITY_MODULE_BK_LED_MATRIX_ENABLE
 #    include "led_matrix_layer_anims.h"
 #    include "badapple.h"
+#    include "doomfire.h"
 #endif
 
 #define LAYOUT_wrapper(...) LAYOUT_split_3x5_3(__VA_ARGS__)
@@ -87,6 +88,9 @@ uint8_t bklm_layer_anim_user(uint8_t layer) {
 
 // Custom trackball animations (LED_MATRIX_MODULE_MOTION_USER_COUNT in config.h).
 bool bklm_motion_user(uint8_t index, RGB *pixels, const bklm_motion_t *m) {
-    return badapple_draw(pixels, m);
+    switch (index) {
+        case 0:  return badapple_draw(pixels, m);
+        default: return doomfire_draw(pixels, m);
+    }
 }
 #endif // COMMUNITY_MODULE_BK_LED_MATRIX_ENABLE

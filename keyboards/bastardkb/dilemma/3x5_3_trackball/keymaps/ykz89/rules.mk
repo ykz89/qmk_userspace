@@ -1,4 +1,5 @@
 ENCODER_MAP_ENABLE = yes
 
-# Bad Apple!! on the left-half LED matrix, as its custom animation.
+# Custom animations for the left-half LED matrix.
 SRC += badapple.c
+SRC += doomfire.c
