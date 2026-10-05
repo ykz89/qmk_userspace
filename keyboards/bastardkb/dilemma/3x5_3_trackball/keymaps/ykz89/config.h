@@ -30,5 +30,5 @@
 #endif
 #define RGBLIGHT_LED_COUNT 72
 
-// Left-half 12x16 WS2812 LED matrix (modules/ykz89/bk_led_matrix), on the VIK port.
+// Left-half 12x16 WS2812 LED matrix (modules/bastardkb/bk_led_matrix), on the VIK port.
 #define LED_MATRIX_MODULE_PIN GP12

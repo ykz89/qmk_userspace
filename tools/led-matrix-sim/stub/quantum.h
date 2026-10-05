@@ -1,4 +1,4 @@
-// Stand-in for QMK's quantum.h: just what modules/ykz89/bk_led_matrix uses.
+// Stand-in for QMK's quantum.h: just what modules/bastardkb/bk_led_matrix uses.
 // The simulator (../sim.c) implements every function declared here.
 #pragma once
 
@@ -44,13 +44,6 @@ uint8_t get_highest_layer(layer_state_t state);
 
 uint8_t rgb_matrix_get_val(void);
 
-/* The user EEPROM word, where the module saves the trackball animation. */
-uint32_t eeconfig_read_user(void);
-void     eeconfig_update_user(uint32_t val);
-
-/* The module's keycode, as QMK generates it from qmk_module.json. */
-#define LED_MATRIX_ANIMATION_NEXT 0x77C0
-#define LM_ANIM LED_MATRIX_ANIMATION_NEXT
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 176
 
 /* GPIO: unused by the simulator's display stand-in. */

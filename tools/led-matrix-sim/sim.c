@@ -1,14 +1,15 @@
 // Copyright 2026 @ykz89
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// LED matrix simulator: runs the real drawing code of modules/ykz89/bk_led_matrix
+// LED matrix simulator: runs the real drawing code of modules/bastardkb/bk_led_matrix
 // on the host, with QMK stubbed and the bit-banged display (led_matrix_display.c)
 // replaced by a frame recorder. Timing matches the keyboard: housekeeping every
 // 1 ms, a pointer report every 10 ms (POINTING_DEVICE_TASK_THROTTLE_MS).
 // The simulated half has both the panel and USB; split sync is not simulated.
 //
 //   sim <scenario> <out.bin> [style]   one scenario per process, so module state starts clean;
-//                                      style is a trackball animation name (default: the module's)
+//                                      style is a trackball animation name, or userN for the
+//                                      keymap's bklm_motion_user() (default: the module's)
 //   sim --list                         scenario names, one per line
 //   sim --styles                       trackball animation names, one per line
 //
@@ -25,6 +26,7 @@
 #include "led_matrix.h"
 #include "led_matrix_display.h"
 #include "led_matrix_motion.h"
+#include "introspection.h"
 
 /* --- QMK stand-ins ------------------------------------------------------- */
 
@@ -41,9 +43,9 @@ bool     is_keyboard_left(void) { return true; }
 uint8_t  get_mods(void) { return sim_mods; }
 uint8_t  rgb_matrix_get_val(void) { return RGB_MATRIX_MAXIMUM_BRIGHTNESS; }
 uint8_t  bkpd_mode_get_active_id(void) { return sim_pointer_mode; }
-static uint32_t sim_eeprom_user;
-uint32_t eeconfig_read_user(void) { return sim_eeprom_user; }
-void     eeconfig_update_user(uint32_t val) { sim_eeprom_user = val; }
+static uint8_t sim_argos[8];
+void argos_read_eeprom(uint16_t offset, void *buf, uint16_t size) { memcpy(buf, &sim_argos[offset], size); }
+void argos_write_eeprom(uint16_t offset, const void *buf, uint16_t size) { memcpy(&sim_argos[offset], buf, size); }
 void     transaction_register_rpc(int8_t id, slave_callback_t cb) { (void)id, (void)cb; }
 bool     transaction_rpc_send(int8_t id, uint8_t len, const void *data) { return (void)id, (void)len, (void)data, true; }
 
@@ -195,6 +197,7 @@ int main(int argc, char **argv) {
     }
     if (argc == 2 && strcmp(argv[1], "--styles") == 0) {
         for (uint8_t i = 0; i < BKLM_MOTION_STYLE_COUNT; i++) puts(bklm_motion_style_name(i));
+        for (uint8_t i = 0; i < LED_MATRIX_MODULE_MOTION_USER_COUNT; i++) printf("user%u\n", i);
         return 0;
     }
     if (argc != 3 && argc != 4) {
@@ -203,12 +206,16 @@ int main(int argc, char **argv) {
     }
     if (argc == 4) {
         uint8_t i = 0;
+        unsigned user;
         while (i < BKLM_MOTION_STYLE_COUNT && strcmp(argv[3], bklm_motion_style_name(i)) != 0) i++;
-        if (i == BKLM_MOTION_STYLE_COUNT) {
+        if (i < BKLM_MOTION_STYLE_COUNT) {
+            bklm_motion_style = i;
+        } else if (sscanf(argv[3], "user%u", &user) == 1 && user < LED_MATRIX_MODULE_MOTION_USER_COUNT) {
+            bklm_motion_style = BKLM_MOTION_USER + user;
+        } else {
             fprintf(stderr, "unknown style %s (try --styles)\n", argv[3]);
             return 2;
         }
-        bklm_motion_style = i;
     }
     for (int i = 0; i < N_SCENARIOS; i++) {
         if (strcmp(argv[1], scenarios[i].name) != 0) continue;

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Simulate the Dilemma's left-half LED matrix and render it as animated GIFs.
 
-Builds sim.c against the real modules/ykz89/bk_led_matrix drawing code and the
+Builds sim.c against the real modules/bastardkb/bk_led_matrix drawing code and the
 trackball keymap's layer callbacks, then renders each scenario. Needs gcc and Pillow.
 
     tools/led-matrix-sim/run.py                      # every scenario
     tools/led-matrix-sim/run.py roll_right circle    # just these
-    tools/led-matrix-sim/run.py -D LED_MATRIX_MODULE_WAVE_RAINBOW_SPAN=1   # try a setting
-    tools/led-matrix-sim/run.py --style stars roll_right   # a trackball animation by name
+    tools/led-matrix-sim/run.py -D LED_MATRIX_MODULE_OCEAN_LENGTH=6   # try a setting
+    tools/led-matrix-sim/run.py --style ocean roll_right   # a trackball animation by name
     tools/led-matrix-sim/run.py --compare     # every animation on the trackball scenarios
     tools/led-matrix-sim/run.py --docs        # the module README's GIFs
 
@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-MODULE = ROOT / 'modules/ykz89/bk_led_matrix'
+MODULE = ROOT / 'modules/bastardkb/bk_led_matrix'
 KEYMAP = ROOT / 'keyboards/bastardkb/dilemma/3x5_3_trackball/keymaps/ykz89/keymap.c'
 QMK = ROOT.parent / 'qmk_firmware-bastardkb'  # the `bastardkb` worktree, as in draw.py
 REAL_MODES = ROOT / 'modules/bastardkb/bk_pointing_device/bk_pointing_modes.h'
@@ -44,18 +44,21 @@ def build(defines):
     if modes(HERE / 'stub/bk_pointing_modes.h') != modes(REAL_MODES):
         sys.exit(f'stub/bk_pointing_modes.h no longer matches {REAL_MODES.relative_to(ROOT)}; update the stub')
 
-    # Copy the keymap's layer-name and layer-animation callbacks into the build.
+    # Copy the keymap's layer-name, layer-animation and (if any) custom animation
+    # callbacks into the build.
     src = KEYMAP.read_text()
     funcs = []
-    for sig in (r'const char \*bklm_layer_name_user\(', r'uint8_t bklm_layer_anim_user\('):
+    for sig, required in ((r'const char \*bklm_layer_name_user\(', True), (r'uint8_t bklm_layer_anim_user\(', True),
+                          (r'bool bklm_motion_user\(', False)):
         f = re.search(r'^(' + sig + r'.*?^\})', src, re.S | re.M)
-        if not f:
+        if f:
+            funcs.append(f.group(1))
+        elif required:
             sys.exit(f'no {sig[:-2].split()[-1]} in {KEYMAP.relative_to(ROOT)}')
-        funcs.append(f.group(1))
     gen = HERE / 'out/build'
     gen.mkdir(parents=True, exist_ok=True)
     (gen / 'layer_names.c').write_text(f'// Generated from {KEYMAP.relative_to(ROOT)} by run.py.\n'
-                                       '#include "ykz89.h"\n#include "led_matrix_layer_anims.h"\n' + '\n'.join(funcs) + '\n')
+                                       '#include "ykz89.h"\n#include "led_matrix_layer_anims.h"\n#include "led_matrix_motion.h"\n' + '\n'.join(funcs) + '\n')
 
     sources = [HERE / 'sim.c', gen / 'layer_names.c', QMK / 'quantum/color.c']
     sources += [p for p in sorted(MODULE.glob('*.c')) if p.name != 'led_matrix_display.c']
@@ -91,7 +94,6 @@ DOCS = [
     ('sparks', 'circle', 'sparks', 300, 3800), ('fireworks', 'roll_then_rest', 'fireworks', 300, 3300),
     ('ocean', 'circle', 'ocean', 300, 3800), ('asteroids', 'circle', 'asteroids', 300, 4300),
     ('matrix', 'idle_long', 'matrix', 0, 4000), ('tetris', 'idle_30s', 'tetris', 0, 13700),
-    ('badapple', 'idle_30s', 'badapple', 15000, 25000),
     *[(f'layer_{l}', f'layer_{l}', None, 300, 2800) for l in ('fun', 'nav', 'media', 'ptr', 'num', 'sym')],
 ]
 DOCS_DIR = MODULE / 'docs'
@@ -140,7 +142,7 @@ def index(rows, defines):
   p {{ color:#a1a1aa; }}
 </style>
 <h1>Dilemma LED matrix</h1>
-<p>Real drawing code from modules/ykz89/bk_led_matrix, simulated. Settings: {settings}.
+<p>Real drawing code from modules/bastardkb/bk_led_matrix, simulated. Settings: {settings}.
 Layer colours are stand-ins (the keyboard reads them from Argos).</p>
 {tiles}
 ''')
