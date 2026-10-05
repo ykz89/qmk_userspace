@@ -5,13 +5,13 @@
 //
 // Thin adapter over users/ykz89/: Dilemma trackball thumbs (3+3) and encoder map.
 // Needs Bastardkb/bastardkb-qmk for the bk_pointing_device and argos modules
-// (DPI_MOD, SNIPING, DRGSCRL, ...); the left-half LED matrix is
-// modules/ykz89/bk_led_matrix, a patched copy of bstiq's ledmatrix branch.
+// (DPI_MOD, SNIPING, DRGSCRL, ...) and bk_led_matrix for the left-half LED matrix.
 
 #include QMK_KEYBOARD_H
 #include "ykz89.h"
 #ifdef COMMUNITY_MODULE_BK_LED_MATRIX_ENABLE
 #    include "led_matrix_layer_anims.h"
+#    include "badapple.h"
 #endif
 
 #define LAYOUT_wrapper(...) LAYOUT_split_3x5_3(__VA_ARGS__)
@@ -58,7 +58,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #endif // ENCODER_MAP_ENABLE
 
 #ifdef COMMUNITY_MODULE_BK_LED_MATRIX_ENABLE
-// Three-letter layer names for the left-half LED matrix (modules/ykz89/bk_led_matrix).
+// Three-letter layer names for the left-half LED matrix (modules/bastardkb/bk_led_matrix).
 const char *bklm_layer_name_user(uint8_t layer) {
     switch (layer) {
         case LAYER_BASE:       return "BSE";
@@ -72,7 +72,7 @@ const char *bklm_layer_name_user(uint8_t layer) {
     }
 }
 
-// Animation shown while each layer is held (modules/ykz89/bk_led_matrix/led_matrix_layer_anims.h).
+// Animation shown while each layer is held (modules/bastardkb/bk_led_matrix/led_matrix_layer_anims.h).
 uint8_t bklm_layer_anim_user(uint8_t layer) {
     switch (layer) {
         case LAYER_FUNCTION:   return BKLM_LAYER_ANIM_GEAR;
@@ -83,5 +83,10 @@ uint8_t bklm_layer_anim_user(uint8_t layer) {
         case LAYER_SYMBOLS:    return BKLM_LAYER_ANIM_MATH;
         default:               return BKLM_LAYER_ANIM_NONE;
     }
+}
+
+// Custom trackball animations (LED_MATRIX_MODULE_MOTION_USER_COUNT in config.h).
+bool bklm_motion_user(uint8_t index, RGB *pixels, const bklm_motion_t *m) {
+    return badapple_draw(pixels, m);
 }
 #endif // COMMUNITY_MODULE_BK_LED_MATRIX_ENABLE
