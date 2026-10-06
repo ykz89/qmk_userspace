@@ -67,7 +67,7 @@ def build(defines, keymap_settings=True):
     sources = [HERE / 'sim.c', gen / 'layer_names.c', QMK / 'quantum/color.c']
     sources += [p for p in sorted(MODULE.glob('*.c')) if p.name != 'led_matrix_display.c']
     sources += [p for p in sorted(KEYMAP.parent.glob('*.c')) if p != KEYMAP]
-    settings = [] if not keymap_settings else re.findall(r'^#define (LED_MATRIX_MODULE_\w+) (.+?)\s*(?://.*)?$', (KEYMAP.parent / 'config.h').read_text(), re.M)
+    settings = [] if not keymap_settings else re.findall(r'^#define (LED_MATRIX_MODULE_\w+|AUTO_MOUSE_DEFAULT_LAYER) (.+?)\s*(?://.*)?$', (KEYMAP.parent / 'config.h').read_text(), re.M)
     overridden = {d.split('=')[0] for d in defines}
     defines = [f'{k}={v}' for k, v in settings if k != 'LED_MATRIX_MODULE_PIN' and k not in overridden] + list(defines)
     binary = gen / 'sim'
@@ -103,6 +103,7 @@ DOCS = [
     ('ocean', 'circle', 'ocean', 300, 3800), ('asteroids', 'circle', 'asteroids', 300, 4300),
     ('matrix', 'idle_long', 'matrix', 0, 4000), ('tetris', 'idle_30s', 'tetris', 0, 13700),
     *[(f'layer_{l}', f'layer_{l}', None, 300, 2800) for l in ('fun', 'nav', 'media', 'ptr', 'num', 'sym')],
+    ('dragscroll', 'dragscroll', None, 300, 3900), ('sniping', 'sniping', None, 300, 4200),
 ]
 DOCS_DIR = MODULE / 'docs'
 

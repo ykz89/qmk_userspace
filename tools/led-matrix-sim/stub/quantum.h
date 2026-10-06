@@ -45,6 +45,7 @@ uint8_t get_highest_layer(layer_state_t state);
 uint8_t rgb_matrix_get_val(void);
 
 #define RGB_MATRIX_MAXIMUM_BRIGHTNESS 176
+#define PRODUCT_ID 0x1836 /* the Dilemma 3x5 trackball */
 
 /* GPIO: unused by the simulator's display stand-in. */
 #define gpio_set_pin_output(pin) ((void)(pin))

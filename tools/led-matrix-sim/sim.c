@@ -140,6 +140,11 @@ static const scenario_t scenarios[] = {
     SCENARIO("layer_num", {300, 0, 0, L_BASE, 0, 0}, {2500, 0, 0, L_NUM, 0, 0}),
     SCENARIO("layer_sym", {300, 0, 0, L_BASE, 0, 0}, {2500, 0, 0, L_SYM, 0, 0}),
     SCENARIO("modifiers", {500, 0, 0, 0, 0, 0}, {800, 0, 0, 0, SHIFT, 0}, {800, 0, 0, 0, SHIFT | CTRL, 0}, {500, 0, 0, 0, 0, 0}),
+    /* Drag-scroll down, right, then up; sniping with the target moved round. */
+    SCENARIO("dragscroll", {300, 0, 0, L_PTR, 0, MODE_DRAGSCROLL}, {1200, 0, 900, L_PTR, 0, MODE_DRAGSCROLL}, {1000, 900, 0, L_PTR, 0, MODE_DRAGSCROLL},
+             {1200, 0, -900, L_PTR, 0, MODE_DRAGSCROLL}, {500, 0, 0, L_PTR, 0, MODE_DRAGSCROLL}),
+    SCENARIO("sniping", {300, 0, 0, L_PTR, 0, MODE_SNIPING}, {700, 400, -300, L_PTR, 0, MODE_SNIPING}, {500, 0, 0, L_PTR, 0, MODE_SNIPING},
+             {900, -500, 300, L_PTR, 0, MODE_SNIPING}, {500, 0, 0, L_PTR, 0, MODE_SNIPING}, {600, 300, 400, L_PTR, 0, MODE_SNIPING}, {700, 0, 0, L_PTR, 0, MODE_SNIPING}),
     SCENARIO("pointer_modes", {500, 0, 0, 0, 0, 0}, {1000, 0, 0, L_PTR, 0, MODE_SNIPING}, {1000, 0, 0, L_PTR, 0, MODE_DRAGSCROLL}, {500, 0, 0, 0, 0, 0}),
     /* Tap LM_ANIM every 1.2 s with the ball still: each style previews itself. */
     SCENARIO("cycle_animations", {300, 0, 0, 0, 0, 0, 0},
@@ -149,6 +154,7 @@ static const scenario_t scenarios[] = {
     SCENARIO("roll_then_rest", {300, 0, 0, 0, 0, 0, 0}, {1000, 1500, -1500, 0, 0, 0, 0}, {3000, 0, 0, 0, 0, 0, 0}),
     /* Left for a second, then right, then still: what a slosh looks like. */
     SCENARIO("left_then_right", {300, 0, 0, 0, 0, 0, 0}, {800, -2500, 0, 0, 0, 0, 0}, {800, 2500, 0, 0, 0, 0, 0}, {3000, 0, 0, 0, 0, 0, 0}),
+    SCENARIO("roll_on_ptr_layer", {400, 0, 0, L_PTR, 0, 0}, {1500, 2000, -1000, L_PTR, 0, 0}, {900, 0, 0, L_PTR, 0, 0}),
     SCENARIO("roll_on_nav_layer", {400, 0, 0, L_NAV, 0, 0}, {1500, 2000, -1000, L_NAV, 0, 0}, {900, 0, 0, L_NAV, 0, 0}),
 };
 #define N_SCENARIOS (int)(sizeof(scenarios) / sizeof(scenarios[0]))
@@ -183,6 +189,20 @@ static void run(const scenario_t *sc) {
                 report_mouse_t r = {.x = (int16_t)(rem_x / 1000), .y = (int16_t)(rem_y / 1000)};
                 rem_x %= 1000;
                 rem_y %= 1000;
+                if (sim_pointer_mode == MODE_DRAGSCROLL) { /* as bk_pointing_device: motion to scroll steps */
+                    static int32_t buf_x, buf_y;
+                    buf_x += r.x;
+                    buf_y += r.y;
+                    r.x = r.y = 0;
+                    if (buf_x > 30 || buf_x < -30) {
+                        r.h   = buf_x > 0 ? 1 : -1;
+                        buf_x = 0;
+                    }
+                    if (buf_y > 30 || buf_y < -30) {
+                        r.v   = buf_y > 0 ? 1 : -1;
+                        buf_y = 0;
+                    }
+                }
                 pointing_device_task_bk_led_matrix(r);
             }
             housekeeping_task_bk_led_matrix();
